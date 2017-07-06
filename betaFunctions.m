@@ -67,7 +67,8 @@ solve[equations_List,
     Function[{name,order},c[name][Except[0,order]] =
         1/order * cExtractorEq[FirstCase[equations,betaFunctionEquation[name,_]],
                                       order-1];
-    ] @@@ Tuples[{initialConditions[[All,1]],Table[k,{k,maxOrder}]}];
+    ] @@@ Flatten[Table[{name,order},{order,Table[k,{k,maxOrder}]},
+                             {name,initialConditions[[All,1]]}],1];
 
     betaFunctionExpansion[#,c[#]] & /@ initialConditions[[All,1]]] /; 
         DuplicateFreeQ[equations, (#1[[1]] == #2[[1]]) &] &&
