@@ -13,8 +13,11 @@ constant term may be represented as {constant}. Every power has to be unique.";
 SetAttributes[polynomial,Orderless];
 
 constantTerm::usage = "Gives the constant term of a p_polynomial.";
-polynomialPlus::usage = "Adds two polynomials.";
-polynomialTimes::usage = "Multiplies two polynomials.";
+polynomialPlus::usage = "Adds polynomials.";
+polynomialTimes::usage = "Multiplies polynomials.";
+
+SetAttributes[polynomialPlus,{Flat,Orderless,OneIdentity}];
+SetAttributes[polynomialTimes,{Flat,Orderless,OneIdentity}];
 
 constantTerm[polynomial[{constant_},___]] := constant 
 constantTerm[polynomial[___]] := 0 
