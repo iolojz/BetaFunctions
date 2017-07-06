@@ -12,7 +12,8 @@ p_polynomial as second argument. This corresponds to s' = p.";
  
 initialCondition::usage = "Represents the initial condition of a \
 beta function. Its first argument is a name_Symbol and its second \
-argument is a the value_ at b[0]. This corresponds to b[0] = value."; 
+argument is a the value_polynomial at b[0]. This corresponds to \
+b[0] = value."; 
  
 betaFunctionExpansion::usage = "Represents a beta function expanded \
 in powers of the independent parameter. The first argument is the \
@@ -40,13 +41,14 @@ solve[equations_List,
           cCombinations = Select[Flatten[cCombinations,power - 1],
                                  ((Plus @@ #) == order) &];
 
-          Plus @@ Times @@@ Map[c[betaFunction],cCombinations,{2}]
+          polynomialPlus @@ polynomialTimes @@@ Map[c[betaFunction],cCombinations,{2}]
           ];
 
     cExtractorTerm[{coeff_},0] := coeff;
     cExtractorTerm[{coeff_},order_Integer] := 0;
     cExtractorTerm[{coeff_,form_List},order_Integer] :=
-    Module[{bRanges, bOrder, bCombinations},
+    Module[{bForm,bRanges, bOrder, bCombinations},
+(* TODO: Not every part of form is a beta function that should be expanded *)
           bRanges = Sequence @@ Table[{bOrder[l],0,order},
                                       {l,1,Length[form]}];
           bCombinations = Table[Table[bOrder[k],{k,1,Length[form]}],
@@ -55,7 +57,7 @@ solve[equations_List,
                                  ((Plus @@ #) == order) &];
           If[Length[bCombinations] === 0,Return[0]];
 
-          coeff * Plus @@ Times @@@ Apply[cExtractorFactor,
+          coeff * polynomialPlus @@ polynomialTimes @@@ Apply[cExtractorFactor,
               Table[{form[[i]],bCombinations[[j,i]]},
                     {j,1,Length[bCombinations]},{i,1,Length[form]}],
                                           {2}]
