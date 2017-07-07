@@ -41,40 +41,66 @@ solve[equations_List,
           cCombinations = Select[Flatten[cCombinations,power - 1],
                                  ((Plus @@ #) == order) &];
 
-          polynomialPlus @@ polynomialTimes @@@ Map[c[betaFunction],cCombinations,{2}]
+          polynomials`polynomialPlus @@ polynomials`polynomialTimes @@@
+            Map[c[betaFunction],cCombinations,{2}]
           ];
 
-    cExtractorTerm[{coeff_},0] := coeff;
-    cExtractorTerm[{coeff_},order_Integer] := 0;
+    cExtractorTerm[{coeff_},0] := polynomial[{coeff}];
+    cExtractorTerm[{coeff_},order_Integer] := polynomial[{0}];
     cExtractorTerm[{coeff_,form_List},order_Integer] :=
-    Module[{bForm,bRanges, bOrder, bCombinations},
-(* TODO: Not every part of form is a beta function that should be expanded *)
+    Module[{cForm,bForm,cPoly,bRanges, bOrder, bCombinations},
+          {bForm,cForm} = GroupBy[form,MemberQ[equations[[All,1]],#[[1]]] &] /@
+                          {True, False};
+          cPoly = If[Head[cForm] === Missing,
+                     polynomials`polynomial[{coeff}],
+                     polynomials`polynomial[{coeff,cForm}]];
+
           bRanges = Sequence @@ Table[{bOrder[l],0,order},
-                                      {l,1,Length[form]}];
-          bCombinations = Table[Table[bOrder[k],{k,1,Length[form]}],
+                                      {l,1,Length[bForm]}];
+          bCombinations = Table[Table[bOrder[k],{k,1,Length[bForm]}],
                                 Evaluate[bRanges]];
-          bCombinations = Select[Flatten[bCombinations,Length[form] - 1],
+          bCombinations = Select[Flatten[bCombinations,Length[bForm] - 1],
                                  ((Plus @@ #) == order) &];
           If[Length[bCombinations] === 0,Return[0]];
 
-          coeff * polynomialPlus @@ polynomialTimes @@@ Apply[cExtractorFactor,
-              Table[{form[[i]],bCombinations[[j,i]]},
-                    {j,1,Length[bCombinations]},{i,1,Length[form]}],
-                                          {2}]
+          polynomials`polynomialTimes[cPoly,
+            polynomials`polynomialPlus @@ polynomials`polynomialTimes @@@
+              Apply[cExtractorFactor,
+                Table[{bForm[[i]],bCombinations[[j,i]]},
+                    {j,1,Length[bCombinations]},{i,1,Length[bForm]}],
+                    {2}]]
           ];
 
     cExtractorEq[eq_betaFunctionEquation,order_Integer] :=
-      Plus @@ cExtractorTerm @@@ Tuples[{eq[[2]],{order}}];
+      polynomialPlus @@ cExtractorTerm @@@ Tuples[{eq[[2]],{order}}];
 
     Function[{name,order},c[name][Except[0,order]] =
-        1/order * cExtractorEq[FirstCase[equations,betaFunctionEquation[name,_]],
-                                      order-1];
+        polynomials`polynomialTimes[polynomials`polynomial[{1/order}],
+                        cExtractorEq[FirstCase[equations,
+                                               betaFunctionEquation[name,_]],
+                                     order-1]];
     ] @@@ Flatten[Table[{name,order},{order,Table[k,{k,maxOrder}]},
                              {name,initialConditions[[All,1]]}],1];
 
-    betaFunctionExpansion[#,c[#]] & /@ initialConditions[[All,1]]] /; 
+    betaFunctionExpansion[#,c[#]] & /@ initialConditions[[All,1]] ] /; 
         DuplicateFreeQ[equations, (#1[[1]] == #2[[1]]) &] &&
         Sort[equations[[All,1]]] == Sort[initialConditions[[All,1]]]
 
 EndPackage[];
 
+
+
+coeff=solve[{betaFunctionEquation[g,polynomials`polynomial[{1},{2,{{g,2},{y,1}}}]],
+             betaFunctionEquation[y,polynomials`polynomial[{1,{{y,3}}}]]},
+            {initialCondition[g,polynomials`polynomial[{42}]],
+             initialCondition[y,polynomials`polynomial[{1}]]},
+            3];
+
+
+coeff
+
+
+Table[coeff[[1,2]][k],{k,0,3}]
+
+
+Table[coeff[[2,2]][k],{k,0,3}]

@@ -16,12 +16,12 @@ constantTerm::usage = "Gives the constant term of a p_polynomial.";
 polynomialPlus::usage = "Adds polynomials.";
 polynomialTimes::usage = "Multiplies polynomials.";
 
-SetAttributes[polynomialPlus,{Flat,Orderless,OneIdentity}];
-SetAttributes[polynomialTimes,{Flat,Orderless,OneIdentity}];
-
 constantTerm[polynomial[{constant_},___]] := constant 
 constantTerm[polynomial[___]] := 0 
- 
+
+polynomialPlus[p_polynomial] := p
+polynomialPlus[p1_polynomial,p2_polynomial,tail__] :=
+  polynomialPlus[polynomialPlus[p1,p2],tail];
 polynomialPlus[polynomial[],p2_polynomial] := p2 
 polynomialPlus[polynomial[{c1_},tail1___],polynomial[{c2_},tail2___]] := 
   polynomial[{c1+c2},
@@ -37,6 +37,9 @@ polynomialPlus[polynomial[{c1_,form1_List},tail1___],
 polynomialPlus[polynomial[term_List,tail___],p2_polynomial] := 
   polynomial[term,Sequence @@ polynomialPlus[polynomial[tail],p2]]
 
+polynomialTimes[p_polynomial] := p
+polynomialTimes[p1_polynomial,p2_polynomial,tail__] :=
+  polynomialTimes[polynomialTimes[p1,p2],tail];
 polynomialTimes[polynomial[],p2_polynomial] := polynomial[]
 polynomialTimes[polynomial[{c1_},tail___],p2_polynomial] :=
   polynomialPlus[p2 /. {c2_,form___} :> {c1*c2,form},
