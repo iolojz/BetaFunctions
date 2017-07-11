@@ -4,7 +4,9 @@ BeginPackage["polynomials`"];
 Clear[polynomial];
 Clear[constantTerm];
 Clear[polynomialPlus];
+Clear[polynomialMinus];
 Clear[polynomialTimes];
+Clear[trim];
 
 polynomial::usage = "Represents a polynomial. polynomial[] expects a Sequence of Lists of \
 the form {coefficient,form} where form is a List of tuples \
@@ -14,7 +16,10 @@ SetAttributes[polynomial,Orderless];
 
 constantTerm::usage = "Gives the constant term of a p_polynomial.";
 polynomialPlus::usage = "Adds polynomials.";
+polynomialMinus::usage = "Subtracts polynomials.";
 polynomialTimes::usage = "Multiplies polynomials.";
+trim::usage = "Trims a p_polynomial to orders less equal than specified by a form. \
+The first argument is the p_polynomial and the second argument is the form.";
 
 constantTerm[polynomial[{constant_},___]] := constant 
 constantTerm[polynomial[___]] := 0 
@@ -37,6 +42,9 @@ polynomialPlus[polynomial[{c1_,form1_List},tail1___],
 polynomialPlus[polynomial[term_List,tail___],p2_polynomial] := 
   polynomial[term,Sequence @@ polynomialPlus[polynomial[tail],p2]]
 
+polynomialMinus[p1_polynomial,p2_polynomial] :=
+  polynomialPlus[p1,polynomialTimes[polynomial[{-1}],p2]]
+
 polynomialTimes[p_polynomial] := p
 polynomialTimes[p1_polynomial,p2_polynomial,tail__] :=
   polynomialTimes[polynomialTimes[p1,p2],tail];
@@ -49,10 +57,14 @@ polynomialTimes[polynomial[{c1_,form_List},tail___],
   polynomialPlus[multiplyWithForm[polynomialTimes[polynomial[{c1}],p2],form],
                  polynomialTimes[polynomial[tail],p2]]
 
+trim[p_polynomial,form_List] :=
+  Select[p,orderLessEqualQ[#,form] &]
+
 Begin["private`"]; 
 Clear[equalForms];
 Clear[multiplyTermWithForm];
 Clear[multiplyForms];
+Clear[orderLessEqualQ];
 
 equalForms[form1_List,form2_List] := (Sort[form1] == Sort[form2])
 
@@ -67,6 +79,14 @@ multiplyForms[{{x_,p1_},tail___},{front___,{x_,p2_},back___}] :=
   Join[multiplyForms[{tail},{front,back}],{{x,p1+p2}}]
 multiplyForms[{{x_,p1_},tail___},form2_List] := 
   Join[multiplyForms[{tail},form2],{{x,p1}}]
+
+orderLessEqualQ[{c_},form_List] := True
+orderLessEqualQ[{_,{{b_,p1_Integer}}},form_List] :=
+  Module[{exp = FirstCase[form,{b,p2_} :> p2]},\
+    If[Head[exp] == Missing,Return[False]];
+    Return[p1 <= exp]]
+orderLessEqualQ[{_,form1_List},form2_List] :=
+  AllTrue[orderLessEqualQ[{1,{#}},form2] & /@ form1,TrueQ]
 
 End[] (* "private`" *)
 EndPackage[]

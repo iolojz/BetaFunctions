@@ -19,12 +19,27 @@ betaFunctionExpansion::usage = "Represents a beta function expanded \
 in powers of the independent parameter. The first argument is the \
 name_Symbol of the beta function and the second parameter is the \
 coefficient map."; 
+
+runTo::usage = "Evaluates a b_betaFunctionExpansion at a given scale \
+to a given order_Integer. The first argument is the \
+b_betaFunctionExpansion, the second one is the scale_ and the third \
+is the order_Integer."
    
 solve::usage = "Solves a system of beta function equations. The first \
 argument is a List containg betaFunctionEquation[]s and the second \
 argument is a list containing the initialCondition[]s. solve[] returns \
 a List of betaFunctionExpansion[]s corresponding to the solutions of \
 the given system.";
+
+runTo[b_betaFunctionExpansion,scale_,order_Integer] :=
+  polynomialPlus @@ polynomialTimes @@@
+    Transpose[{Table[b[[2]][k],{k,0,order}],
+               Flatten[{polynomial[{1}],Table[polynomial[{scale^k}],{k,1,order}]}]}] /;
+  NumericQ[scale]
+runTo[b_betaFunctionExpansion,scale_,order_Integer] :=
+  polynomialPlus @@ polynomialTimes @@@
+    Transpose[{Table[b[[2]][k],{k,0,order}],
+               Flatten[{polynomial[{1}],Table[polynomial[{1,{{scale,k}}}],{k,1,order}]}]}]
 
 solve[equations_List,
       initialConditions_List,
@@ -90,17 +105,7 @@ EndPackage[];
 
 
 
-coeff=solve[{betaFunctionEquation[g,polynomials`polynomial[{1},{2,{{g,2},{y,1}}}]],
-             betaFunctionEquation[y,polynomials`polynomial[{1,{{y,3}}}]]},
-            {initialCondition[g,polynomials`polynomial[{42}]],
-             initialCondition[y,polynomials`polynomial[{1}]]},
-            3];
 
 
-coeff
 
 
-Table[coeff[[1,2]][k],{k,0,3}]
-
-
-Table[coeff[[2,2]][k],{k,0,3}]
